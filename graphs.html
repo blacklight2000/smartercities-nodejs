@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style> body { padding-top: 0px; border:0px solid black } </style>
+  <meta charset="utf-8">
+  <title>Bootstrap 3, from LayoutIt!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+	<!--link rel="stylesheet/less" href="less/bootstrap.less" type="text/css" /-->
+	<!--link rel="stylesheet/less" href="less/responsive.less" type="text/css" /-->
+	<!--script src="js/less-1.3.3.min.js"></script-->
+	<!--append ‘#!watch’ to the browser URL, then refresh the page. -->
+	
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/style.css" rel="stylesheet">
+
+  <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+  <!--[if lt IE 9]>
+    <script src="js/html5shiv.js"></script>
+  <![endif]-->
+
+  <!-- Fav and touch icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="img/apple-touch-icon-144-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="114x114" href="img/apple-touch-icon-114-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="72x72" href="img/apple-touch-icon-72-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" href="img/apple-touch-icon-57-precomposed.png">
+  <link rel="shortcut icon" href="img/favicon.png">
+  
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="js/scripts.js"></script>
+  <style>
+   .table-hover tbody tr:hover td, 
+   .table-hover tbody tr:hover th { background-color: yellow; }
+  </style>
+</head>
+
+<body>
+  <div class="container-fluid">
+
+    <div class="container">
+       <!-- Static navbar -->
+       <div class="navbar navbar-default" role="navigation">
+         <div class="navbar-header">
+           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+             <span class="sr-only">Toggle navigation</span>
+             <span class="icon-bar"></span>
+             <span class="icon-bar"></span>
+             <span class="icon-bar"></span>
+           </button>
+           <a class="navbar-brand" href="#">Smarter Cities</a>
+        </div>
+      </div>
+
+
+
+	<div class="row clearfix">
+	   <div class="col-md-12 column">
+	      <div class="jumbotron" style="outline: 1px solid black">
+		 <div><center><h2>Dashboard</h2></center></div>
+	      </div>
+           </div>
+        </div>
+
+	<div class="row clearfix">
+	   <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12 column" style="vertical-align: middle; horizontal-align: middle" id="area0">
+	   </div>
+	   <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12 column" style="vertical-align: middle; horizontal-align: middle" id="area1">
+	   </div>
+	   <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12 column" style="vertical-align: middle; horizontal-align: middle" id="area2">
+	   </div>
+    </div>
+  </div>
+
+  <style>
+    .axis { font: 10px sans-serif; }
+    .axis path. .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
+  </style>
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+
+<script>
+
+var areas = [ "#area0", "#area1", "#area2" ]
+var json_data = []
+
+var margin = {top: 20, right: 20, bottom: 70, left: 90},
+    width = 400 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom;
+
+// Parse the date / time
+// var parseDate = d3.time.format("%Y-%m").parse;
+
+var x = d3.scale.ordinal().rangeRoundBands([0, width], .05);
+
+var y = d3.scale.linear().range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom")
+//    .tickFormat(d3.time.format("%Y-%m"));
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left")
+    .ticks(10);
+
+var svg_i = function(area_i) {
+    return d3.select(area_i).append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    }
+
+var svg = svg_i(areas[0])
+
+d3.json("http://127.0.0.1:8000/data.json", function(error, json) {
+  if (error) return console.warn(error);
+  var data = [], i;
+  json_data = json;
+  for (i=0; i<json_data[0]['x'].length; i++) {
+    data[i] = { "date":json[0]['x'][i],"value":json[0]['y'][i] }
+  }
+ 
+  
+  var SVG = function(svg_title,svg_xlabel,svg_ylabel) {
+    x.domain(data.map(function(d) { return d.date; }));
+    y.domain([0, d3.max(data, function(d) { return d.value; })]);
+
+    svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+      .selectAll("text")
+      .style("text-anchor", "end")
+      .attr("dx", "-.8em")
+      .attr("dy", "-.55em")
+      .attr("transform", "rotate(-90)" );
+
+    svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+      .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Values ($)");
+
+    svg.selectAll("bar")
+      .data(data)
+      .enter().append("rect")
+      .style("fill", "steelblue")
+      .attr("x", function(d) { return x(d.date); })
+      .attr("width", x.rangeBand())
+      .attr("y", function(d) { return y(d.value); })
+      .attr("height", function(d) { return height - y(d.value); });
+
+   // Create title
+   svg.append("text")
+     .attr("x", width / 2 )
+     .attr("y", 0)
+     .style("text-anchor", "middle")
+     .text(svg_title);
+
+  //Create X axis label   
+  svg.append("text")
+    .attr("x", width / 2 )
+    .attr("y",  y(0) + 40 )
+    .style("text-anchor", "middle")
+    .text(svg_xlabel);
+
+  //Create Y axis label
+  svg.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", x(0) - 80 )
+    .attr("x",0 - (height / 2))
+    .attr("dy", "1em")
+    .style("text-anchor", "middle")
+    .text(svg_ylabel); 
+
+  }
+
+  SVG(json[0]['title'],json[0]['xlabel'],json[0]['xlabel'])
+
+  svg = svg_i(areas[1])
+  data = []
+  for (i=0; i<json_data[1]['x'].length; i++) {
+    data[i] = { "date":json[1]['x'][i],"value":json[1]['y'][i] }
+  }
+ SVG(json[1]['title'],json[1]['xlabel'],json[1]['ylabel'])
+
+ svg = svg_i(areas[2])
+ data = []
+  for (i=0; i<json_data[2]['x'].length; i++) {
+    data[i] = { "date":json[2]['x'][i],"value":json[2]['y'][i] }
+  }
+ SVG(json[2]['title'],json[2]['xlabel'],json[2]['ylabel'])
+ 
+
+});
+
+</script>
+
+
+</body>
+</html>
